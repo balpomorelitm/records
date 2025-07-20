@@ -181,6 +181,11 @@
         .player-score {
             color: var(--color-cyan);
         }
+
+        .score-date {
+            color: var(--color-text);
+            font-size: 0.8rem;
+        }
         
         /* --- Mensajes y Carga --- */
         #message-box {
@@ -343,7 +348,7 @@
             for (const game of games) {
                 const { data: scores, error: scoresError } = await supabaseClient
                     .from('scores')
-                    .select('player_name, score')
+                    .select('player_name, score, created_at')
                     .eq('game_id', game.id)
                     .order('score', { ascending: false })
                     .limit(5);
@@ -364,9 +369,12 @@
                 if (scores.length > 0) {
                     scores.forEach(score => {
                         const li = document.createElement('li');
+                        const date = new Date(score.created_at);
+                        const formattedDate = `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
                         li.innerHTML = `
                             <span class="player-name">${score.player_name.toUpperCase()}</span>
                             <span class="player-score">${score.score}</span>
+                            <span class="score-date">${formattedDate}</span>
                         `;
                         scoreListElement.appendChild(li);
                     });
