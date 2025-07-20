@@ -33,7 +33,8 @@
             margin: 0;
             padding: 2rem;
             min-height: 100vh;
-            text-shadow: 2px 2px var(--color-cyan);
+            /* CAMBIO: Sombra de texto cambiada a fucsia para mayor contraste */
+            text-shadow: 2px 2px var(--color-fuchsia);
         }
 
         /* --- Contenedor Principal --- */
@@ -249,23 +250,14 @@
     <div id="message-box"></div>
 
     <script>
-        // --- CONFIGURACIÓN DE SUPABASE ---
-        // INSTRUCCIONES:
-        // 1. Ve a tu proyecto de Supabase.
-        // 2. En el menú de la izquierda, ve a "Project Settings" (icono de engranaje) > "API".
-        // 3. Copia la "Project URL" y pégala en SUPABASE_URL.
-        // 4. Copia la "Project API Keys" de tipo "anon" (pública) y pégala en SUPABASE_ANON_KEY.
+
         
         const SUPABASE_URL = 'https://dkmelxlkidcaixixtdmb.supabase.co'; // <-- REEMPLAZA CON TU URL
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRrbWVseGxraWRjYWl4aXh0ZG1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMDQxNzUsImV4cCI6MjA2ODU4MDE3NX0.cneqiHBMr521InyGyHhAyT4RraqZckR_u-03dW0rnfs'; // <-- REEMPLAZA CON TU CLAVE ANON
 
         // --- INICIALIZACIÓN DEL CLIENTE ---
-        // FIX: Se ha renombrado la variable del cliente a 'supabaseClient' para evitar conflictos
-        // con el objeto global 'supabase' que provee el script de la CDN.
         let supabaseClient;
         try {
-            // El objeto global 'supabase' está disponible gracias al script de la CDN.
-            // Llamamos a createClient en él para obtener nuestra instancia del cliente.
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (error) {
             console.error("Error inicializando Supabase. Revisa tus credenciales.", error);
@@ -303,9 +295,7 @@
          * Obtiene la lista de juegos desde Supabase y la carga en el menú desplegable.
          */
         async function fetchGames() {
-            // FIX: Comprobar si el cliente 'supabaseClient' está inicializado
             if (!supabaseClient) return;
-            // FIX: Usar 'supabaseClient' para la consulta
             const { data: games, error } = await supabaseClient
                 .from('games')
                 .select('id, name')
@@ -317,7 +307,6 @@
                 return;
             }
 
-            // Limpiar opciones existentes (excepto la primera)
             gameSelect.innerHTML = '<option value="">-- SELECT GAME --</option>';
             
             games.forEach(game => {
@@ -332,13 +321,10 @@
          * Obtiene y muestra las puntuaciones más altas para cada juego.
          */
         async function fetchAndRenderScores() {
-            // FIX: Comprobar si el cliente 'supabaseClient' está inicializado
             if (!supabaseClient) return;
             loadingIndicator.style.display = 'block';
-            scoresList.innerHTML = ''; // Limpiar la lista actual
+            scoresList.innerHTML = ''; 
 
-            // 1. Obtener todos los juegos
-            // FIX: Usar 'supabaseClient' para la consulta
             const { data: games, error: gamesError } = await supabaseClient
                 .from('games')
                 .select('id, name');
@@ -354,22 +340,19 @@
                 return;
             }
 
-            // 2. Para cada juego, obtener sus 5 mejores puntuaciones
             for (const game of games) {
-                // FIX: Usar 'supabaseClient' para la consulta
                 const { data: scores, error: scoresError } = await supabaseClient
                     .from('scores')
                     .select('player_name, score')
                     .eq('game_id', game.id)
                     .order('score', { ascending: false })
-                    .limit(5); // Obtener el Top 5
+                    .limit(5);
 
                 if (scoresError) {
                     console.error(`Error fetching scores for ${game.name}:`, scoresError);
-                    continue; // Continuar con el siguiente juego si hay un error
+                    continue; 
                 }
 
-                // 3. Renderizar la sección del juego
                 const gameContainer = document.createElement('div');
                 gameContainer.className = 'game-scores';
 
@@ -403,9 +386,8 @@
          * Maneja el envío del formulario para añadir una nueva puntuación.
          */
         scoreForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Evitar que la página se recargue
+            event.preventDefault(); 
 
-            // FIX: Comprobar si el cliente 'supabaseClient' está inicializado
             if (!supabaseClient) {
                 showMessage('Error: La base de datos no está conectada.', true);
                 return;
@@ -416,13 +398,11 @@
             const score = form['score'].value;
             const gameId = form['game-select'].value;
 
-            // Validación simple
             if (!playerName || !score || !gameId) {
                 showMessage('Todos los campos son obligatorios.', true);
                 return;
             }
 
-            // FIX: Usar 'supabaseClient' para la consulta
             const { error } = await supabaseClient
                 .from('scores')
                 .insert([
@@ -438,15 +418,14 @@
                 showMessage('Error al guardar la puntuación.', true);
             } else {
                 showMessage('PUNTUACIÓN GUARDADA!');
-                form.reset(); // Limpiar el formulario
-                await fetchAndRenderScores(); // Actualizar la lista de puntuaciones
+                form.reset(); 
+                await fetchAndRenderScores(); 
             }
         });
 
 
         // --- INICIALIZACIÓN AL CARGAR LA PÁGINA ---
         document.addEventListener('DOMContentLoaded', () => {
-            // FIX: Comprobar si el cliente 'supabaseClient' está inicializado
             if (supabaseClient) {
                 fetchGames();
                 fetchAndRenderScores();
